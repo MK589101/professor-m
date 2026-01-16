@@ -1,16 +1,11 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { CompositionAnalysis } from "../types";
 
-// Always use the API key directly from process.env.API_KEY as per guidelines
-// 暫時直接貼上鑰匙測試
-// @ts-ignore
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
-
-const SYSTEM_INSTRUCTION = `You are Professor Minchingwu, a world-class, extremely kind and encouraging, and demanding English composition professor. 
-Your goal is to help students achieve C2 (Mastery) proficiency. 
-You do not tolerate sloppiness, "lazy" vocabulary, or weak arguments. 
-Your tone is formal, professional, funny and speaks like a pirate, but ultimately constructive. 
+// 這裡設定你的海盜教授個性
+const SYSTEM_INSTRUCTION = `You are Professor Minchingwu, a world-class, extremely kind and encouraging, and demanding English composition professor.
+Your goal is to help students achieve C2 (Mastery) proficiency.
+You do not tolerate sloppiness, "lazy" vocabulary, or weak arguments.
+Your tone is formal, professional, funny and speaks like a pirate, but ultimately constructive.
 You focus on academic precision, sophisticated sentence variety, and logical cohesion.
 
 When reviewing a student's work:
@@ -32,64 +27,48 @@ const RESPONSE_SCHEMA = {
         grammar: {
           type: Type.OBJECT,
           properties: {
-            title: { type: Type.STRING },
-            critique: { type: Type.STRING },
-            suggestions: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ["title", "critique", "suggestions"]
+            score: { type: Type.NUMBER },
+            comment: { type: Type.STRING },
+            feedback: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
         },
         vocabulary: {
           type: Type.OBJECT,
           properties: {
-            title: { type: Type.STRING },
-            critique: { type: Type.STRING },
-            suggestions: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ["title", "critique", "suggestions"]
+            score: { type: Type.NUMBER },
+            comment: { type: Type.STRING },
+            feedback: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
         },
         structure: {
           type: Type.OBJECT,
           properties: {
-            title: { type: Type.STRING },
-            critique: { type: Type.STRING },
-            suggestions: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ["title", "critique", "suggestions"]
+            score: { type: Type.NUMBER },
+            comment: { type: Type.STRING },
+            feedback: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
         },
-        logic: {
-          type: Type.OBJECT,
-          properties: {
-            title: { type: Type.STRING },
-            critique: { type: Type.STRING },
-            suggestions: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ["title", "critique", "suggestions"]
-        }
-      },
-      required: ["grammar", "vocabulary", "structure", "logic"]
-    },
-    revisedVersion: { type: Type.STRING, description: "The full corrected and improved essay." }
-  },
-  required: ["overallScore", "overallEvaluation", "categories", "revisedVersion"]
+        revisedVersion: { type: Type.STRING, description: "The rewritten A+ version of the essay." }
+      }
+    }
+  }
 };
 
-export async function analyzeComposition(text: string): Promise<CompositionAnalysis> {
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Please critique my essay:\n\n${text}`,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
-      },
-    });
+export async function analyzeComposition(essay: string) {
+  // ✅ 修正點：只在按按鈕時才連線，避免網站一開就當機
+  // @ts-ignore
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
 
-    // Directly access the text property as per GenerateContentResponse guidelines
-    const result = JSON.parse(response.text || '{}');
-    return result as CompositionAnalysis;
-  } catch (error) {
-    console.error("Error analyzing composition:", error);
-    throw error;
-  }
+  const model = ai.getGenerativeModel({
+    model: "gemini-2.0-flash-exp",
+    systemInstruction: SYSTEM_INSTRUCTION,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: RESPONSE_SCHEMA,
+    }
+  });
+
+  const result = await model.generateContent(essay);
+  const response = result.response;
+  return JSON.parse(response.text());
 }
