@@ -3,7 +3,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { CompositionAnalysis } from "../types";
 
 // Always use the API key directly from process.env.API_KEY as per guidelines
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
+// 暫時直接貼上鑰匙測試
+const ai = new GoogleGenAI({ apiKey: "AIzaSyATCi54GebUR46QThPs_sWsgvVeX56PGrE" });
 
 const SYSTEM_INSTRUCTION = `You are Professor Minchingwu, a world-class, extremely kind and encouraging, and demanding English composition professor. 
 Your goal is to help students achieve C2 (Mastery) proficiency. 
